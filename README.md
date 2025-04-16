@@ -34,3 +34,45 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Project file structure
+```
+my-blog/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx                      # Home Page
+│   ├── about/page.tsx
+│   ├── timeline/page.tsx            # Blog timeline
+│   ├── blog/[slug]/page.tsx         # Single blog post
+│   ├── api/
+│   │   ├── auth/[...nextauth]/route.ts  # Auth routes
+│   │   └── posts/route.ts               # CRUD blog post API
+│   └── dashboard/                     # Auth-protected area
+│       └── page.tsx
+│
+├── components/
+│   ├── Navbar.tsx
+│   ├── Footer.tsx
+│   └── BlogCard.tsx
+│
+├── lib/
+│   ├── mongodb.ts                    # MongoDB client connection
+│   └── auth.ts                       # NextAuth config
+│
+├── models/
+│   └── Post.ts                       # Mongoose schema
+│
+├── styles/
+│   └── globals.css                   # Tailwind + custom styles
+│
+├── public/
+│   └── logo.svg
+│
+├── .env.local                        # MongoDB URI, JWT secret etc.
+├── tailwind.config.ts
+├── postcss.config.ts
+├── next.config.js
+├── Dockerfile
+├── docker-compose.yml
+└── package.json
+```
