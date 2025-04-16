@@ -1,0 +1,213 @@
+// Due to size and modularity, here's the structured breakdown of the key files and code snippets.
+// For simplicity, we will outline each file's contents based on your requested layout.
+
+// ----- app/layout.tsx -----
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className="dark">
+      <body className="bg-gray-950 text-white">
+        {children}
+      </body>
+    </html>
+  )
+}
+
+// ----- app/page.tsx -----
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
+
+export default function Home() {
+  return (
+    <>
+      <Navbar />
+      <main className="p-6">
+        <h1 className="text-3xl font-bold">Welcome to My Blog</h1>
+      </main>
+      <Footer />
+    </>
+  )
+}
+
+// ----- app/about/page.tsx -----
+export default function About() {
+  return (
+    <div className="p-6">About us content here...</div>
+  )
+}
+
+// ----- app/timeline/page.tsx -----
+import BlogCard from '../../components/BlogCard'
+
+export default function Timeline() {
+  return (
+    <div className="p-6 space-y-4">
+      <BlogCard />
+    </div>
+  )
+}
+
+// ----- app/blog/[slug]/page.tsx -----
+export default function BlogPost({ params }: { params: { slug: string } }) {
+  return (
+    <div className="p-6">Single post for slug: {params.slug}</div>
+  )
+}
+
+// ----- app/api/auth/[...nextauth]/route.ts -----
+import NextAuth from 'next-auth'
+import authOptions from '../../../../lib/auth'
+
+const handler = NextAuth(authOptions)
+export { handler as GET, handler as POST }
+
+// ----- app/api/posts/route.ts -----
+import { NextResponse } from 'next/server'
+import db from '../../../lib/mongodb'
+import Post from '../../../models/Post'
+
+export async function GET() {
+  await db()
+  const posts = await Post.find({})
+  return NextResponse.json(posts)
+}
+
+// ----- app/dashboard/page.tsx -----
+export default function Dashboard() {
+  return <div className="p-6">Auth Protected Dashboard</div>
+}
+
+// ----- components/Navbar.tsx -----
+export default function Navbar() {
+  return (
+    <nav className="bg-gray-800 p-4">Navbar</nav>
+  )
+}
+
+// ----- components/Footer.tsx -----
+export default function Footer() {
+  return <footer className="bg-gray-800 p-4">Footer</footer>
+}
+
+// ----- components/BlogCard.tsx -----
+export default function BlogCard() {
+  return (
+    <div className="p-4 border border-gray-700 rounded">Blog Post Preview</div>
+  )
+}
+
+// ----- lib/mongodb.ts -----
+import mongoose from 'mongoose'
+
+const MONGODB_URI = process.env.MONGODB_URI as string
+
+export default async function db() {
+  if (mongoose.connection.readyState >= 1) return
+  return mongoose.connect(MONGODB_URI)
+}
+
+// ----- lib/auth.ts -----
+import { NextAuthOptions } from 'next-auth'
+import GitHubProvider from 'next-auth/providers/github'
+
+const authOptions: NextAuthOptions = {
+  providers: [
+    GitHubProvider({
+      clientId: process.env.GITHUB_ID!,
+      clientSecret: process.env.GITHUB_SECRET!,
+    }),
+  ],
+  secret: process.env.NEXTAUTH_SECRET,
+}
+
+export default authOptions
+
+// ----- models/Post.ts -----
+import mongoose from 'mongoose'
+
+const PostSchema = new mongoose.Schema({
+  title: String,
+  slug: String,
+  content: String,
+  createdAt: { type: Date, default: Date.now },
+})
+
+export default mongoose.models.Post || mongoose.model('Post', PostSchema)
+
+// ----- styles/globals.css -----
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+// ----- .env.local -----
+MONGODB_URI=mongodb://localhost:27017/myblog\NGITHUB_ID=yourgithubclientid
+GITHUB_SECRET=yourgithubsecret
+NEXTAUTH_SECRET=asecretkey
+
+// ----- tailwind.config.ts -----
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
+  darkMode: 'class',
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+export default config
+
+// ----- postcss.config.ts -----
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+// ----- next.config.js -----
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    appDir: true,
+  },
+}
+
+module.exports = nextConfig
+
+// ----- Dockerfile -----
+FROM node:20-alpine
+WORKDIR /app
+COPY . .
+RUN npm install
+CMD ["npm", "run", "dev"]
+
+// ----- docker-compose.yml -----
+version: '3.9'
+services:
+  web:
+    build: ./my-blog
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./my-blog:/app
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/myblog
+      - NEXTAUTH_SECRET=mysecret
+      - GITHUB_ID=xxx
+      - GITHUB_SECRET=xxx
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
